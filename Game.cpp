@@ -28,10 +28,16 @@ void Game::initWindow() {
         window->getSize().y - ARROW_LENGTH);
     arrowLine_[0].color = sf::Color::White;
     arrowLine_[1].color = sf::Color::White;
+
+    arrowTriangle_ = sf::CircleShape(15, 3);
+    arrowTriangle_.setPosition(arrowLine_[1].position.x,
+        arrowLine_[1].position.y);
+    arrowTriangle_.setOrigin(arrowTriangle_.getRadius(),
+        3/2 * arrowTriangle_.getRadius());
 }
 
 void Game::initField() {
-    circles_.reserve(INITIAL_BALLS_COLS * INITIAL_BALLS_ROWS);
+    circles_.reserve((int) INITIAL_BALLS_COLS * INITIAL_BALLS_ROWS);
 
     for (int x = 0; x < INITIAL_BALLS_COLS; x++) {
         for (int y = 0; y < INITIAL_BALLS_ROWS; y++) {
@@ -51,23 +57,29 @@ void Game::initField() {
 }
 
 void Game::updateArrow(sf::Vector2i pos) {
+    // The line
     auto wSize = window->getSize();
-    double f, x;
+    double x, angle;
+    double len_y = (double) wSize.y - pos.y;
+    double len_x = abs(wSize.x / 2.0 - pos.x);
+    double f = ARROW_LENGTH /
+        (sqrt(pow(len_x, 2) + pow(len_y, 2)));
+    double y = wSize.y - len_y * f;
 
     if (pos.x < window->getSize().x / 2) {
-        double len_x = wSize.x / 2.0 - pos.x;
-        f = ARROW_LENGTH /
-            (sqrt(pow(len_x, 2) + pow(wSize.y - pos.y, 2)));
         x = (wSize.x / 2) - (len_x) * f;
+        angle = atan2(len_y, len_x) * 180 / PI - 90;
     } else {
-        double len_x = pos.x - wSize.x / 2.0;
-        f = ARROW_LENGTH /
-            (sqrt(pow(len_x, 2) + pow(wSize.y - pos.y, 2)));
         x = (wSize.x / 2) + (len_x) * f;
+        angle = -atan2(len_y, len_x) * 180 / PI + 90;
     }
 
-    double y = wSize.y - ((double) wSize.y - pos.y) * f;
     arrowLine_[1].position = sf::Vector2f(x, y);
+
+    // The triangle
+    arrowTriangle_.setPosition(arrowLine_[1].position.x,
+        arrowLine_[1].position.y);
+    arrowTriangle_.setRotation(angle);
 }
 
 void Game::update() {
@@ -86,7 +98,9 @@ void Game::update() {
         window->draw(b.circle);
     }
 
+    // Draw the arrow parts
     window->draw(arrowLine_);
+    window->draw(arrowTriangle_);
 }
 
 void Game::render() {

@@ -70,6 +70,6 @@ private:
 	};
 
 	// The arrow
-	sf::Vector2f arrowDrection_;
 	sf::VertexArray arrowLine_;
+	sf::CircleShape arrowTriangle_;
 };
