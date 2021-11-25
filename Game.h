@@ -1,5 +1,6 @@
 #pragma once
 #include <SFML/Graphics.hpp>
+#include <array>
 #include <deque>
 #include <math.h>
 
@@ -72,7 +73,7 @@ private:
 	sf::RenderWindow* window = nullptr;
 	bool running_ = false;
 
-	Circle* circles_[C_PER_ROW][C_PER_COL];
+	std::array<std::array<Circle*, C_PER_COL>, C_PER_ROW> circles_;
 	Circle* active_;
 
 	std::vector<sf::Color> colors_ = {
