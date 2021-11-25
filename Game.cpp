@@ -4,6 +4,7 @@
 Game::Game() {
     initWindow();
     initField();
+    window->setFramerateLimit(60);
 	running_ = true;
 }
 
@@ -125,9 +126,15 @@ void Game::update() {
     // Move the active circle
     if (active_.circle != nullptr && active_.direction > 0) {
         double angle = active_.direction;
-        double move_x = -sin(angle * PI / 180);
-        double move_y = cos(angle * PI / 180);
+        double move_x = 5 * -sin(angle * PI / 180);
+        double move_y = 5 * cos(angle * PI / 180);
         auto current_pos = active_.circle->getPosition();
+
+        if (active_.circle->getPosition().x <= 0 ||
+            active_.circle->getPosition().x >= window->getSize().x - 2 * C_RADIUS) {
+            active_.direction = 360 - angle;
+            move_x = -move_x;
+        }
 
         active_.circle->setPosition(current_pos.x - move_x,
             current_pos.y - move_y);
