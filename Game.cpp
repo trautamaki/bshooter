@@ -24,7 +24,7 @@ Game::~Game() {
         }
     }
 
-    delete active_.circle;
+    delete active_->circle;
 }
 
 bool Game::running() {
@@ -56,14 +56,14 @@ void Game::initWindow() {
 void Game::initField() {
     for (int x = 0; x < INITIAL_BALLS_COLS; x++) {
         for (int y = 0; y < INITIAL_BALLS_ROWS; y++) {
-            int offsetY = 0;
+            int offsetX = 0;
             if (y % 2 == 0) {
-                offsetY = C_RADIUS;
+                offsetX = C_RADIUS;
             }
 
             sf::CircleShape* shape = new sf::CircleShape(C_RADIUS);
             shape->setFillColor(colors_.at(rand() % colors_.size()));
-            shape->setPosition(x * C_RADIUS * 2 + offsetY,
+            shape->setPosition(x * C_RADIUS * 2 + offsetX,
                 y * C_RADIUS * 2);
 
             circles_[x][y] = new Circle { shape };
@@ -100,15 +100,44 @@ void Game::updateArrow(sf::Vector2i pos) {
 }
 
 void Game::newCircle() {
-    active_ = Circle{ new sf::CircleShape(C_RADIUS) };
-    active_.circle->setFillColor(colors_.at(rand() % colors_.size()));
-    active_.circle->setPosition(window->getSize().x / 2 - C_RADIUS,
+    active_ = new Circle{ new sf::CircleShape(C_RADIUS) };
+    active_->circle->setFillColor(colors_.at(rand() % colors_.size()));
+    active_->circle->setPosition(window->getSize().x / 2 - C_RADIUS,
         window->getSize().y - 2 * C_RADIUS);
 }
 
 void Game::launch() {
     // Get launch angle
-    active_.direction = arrowTriangle_.getRotation();
+    active_->direction = arrowTriangle_.getRotation();
+}
+
+void Game::checkCollision() {
+    for (const auto& x : circles_) {
+        for (const auto& y : x) {
+            if (y != nullptr) {
+                float a_square = pow(y->circle->getPosition().x
+                    - active_->circle->getPosition().x, 2);
+                float b_square = pow(y->circle->getPosition().y
+                    - active_->circle->getPosition().y, 2);
+
+                if (sqrt(a_square + b_square) <= 2 * C_RADIUS) {
+                    
+                    active_->direction = -1;
+                    int x = active_->circle->getPosition().x / (2 * C_RADIUS);
+                    int y = active_->circle->getPosition().y / (2 * C_RADIUS) + 1;
+                    int offsetX = 0;
+
+                    if (y % 2 == 0)
+                        offsetX = C_RADIUS;
+
+                    active_->circle->setPosition(x * 2 * C_RADIUS + offsetX,
+                        y * 2 * C_RADIUS);
+                    circles_[x][y] = active_;
+                    newCircle();
+                }
+            }
+        }
+    }
 }
 
 void Game::update() {
@@ -121,10 +150,12 @@ void Game::update() {
             updateArrow(sf::Mouse::getPosition(*window));
 
         } else if (event.type == sf::Event::MouseButtonReleased
-            && active_.direction < 0) {
+            && active_->direction < 0) {
             launch();
         }
     }
+
+    checkCollision();
 
     window->clear();
 
@@ -137,22 +168,24 @@ void Game::update() {
     }
 
     // Move the active circle
-    if (active_.circle != nullptr && active_.direction > 0) {
-        double angle = active_.direction;
-        double move_x = 5 * -sin(angle * PI / 180);
-        double move_y = 5 * cos(angle * PI / 180);
-        auto current_pos = active_.circle->getPosition();
+    if (active_->circle != nullptr) {
+        if (active_->direction > 0) {
+            double angle = active_->direction;
+            double move_x = 5 * -sin(angle * PI / 180);
+            double move_y = 5 * cos(angle * PI / 180);
+            auto current_pos = active_->circle->getPosition();
 
-        if (active_.circle->getPosition().x <= 0 ||
-            active_.circle->getPosition().x >= window->getSize().x - 2 * C_RADIUS) {
-            active_.direction = 360 - angle;
-            move_x = -move_x;
+            if (active_->circle->getPosition().x <= 0 ||
+                active_->circle->getPosition().x >= window->getSize().x - 2 * C_RADIUS) {
+                active_->direction = 360 - angle;
+                move_x = -move_x;
+            }
+
+            active_->circle->setPosition(current_pos.x - move_x,
+                current_pos.y - move_y);
         }
 
-        active_.circle->setPosition(current_pos.x - move_x,
-            current_pos.y - move_y);
-
-        window->draw(*active_.circle);
+        window->draw(*active_->circle);
     }
 
     // Draw the arrow parts

@@ -17,6 +17,7 @@ private:
 	void updateArrow(sf::Vector2i pos);
 	void newCircle();
 	void launch();
+	void checkCollision();
 
 	// Constants
 	static constexpr unsigned int C_RADIUS = 20;
@@ -51,7 +52,7 @@ private:
 	bool running_ = false;
 
 	Circle* circles_[C_PER_ROW][C_PER_COL];
-	Circle active_;
+	Circle* active_;
 
 	std::vector<sf::Color> colors_ = {
 		sf::Color::Green,
