@@ -1,5 +1,6 @@
 #pragma once
 #include <SFML/Graphics.hpp>
+#include <deque>
 #include <math.h>
 
 class Game {
@@ -12,12 +13,32 @@ public:
 	void render();
 
 private:
+	// Create the window and set its settings.
 	void initWindow();
+
+	// Initialize the field, place initial circles.
 	void initField();
+
+	// Refresh arrow direction to point toward pos.
 	void updateArrow(sf::Vector2i pos);
+
+	// Spawn a new circle at arrow.
 	void newCircle();
+
+	// Launch the active circle to direction of mouseclick.
 	void launch();
+
+	// Check for collisions between active circle and stale
+	// circles and place the active on the stale field.
 	void checkCollision();
+
+	// Check if circles have 3 or more of same color in a row
+	// at coordinate x,y.
+	void checkRemoval(int x, int y, sf::Color color);
+
+	// Check for islands that may be left after removing
+	// surrounding circles.
+	void checkIslands();
 
 	// Constants
 	static constexpr unsigned int C_RADIUS = 20;

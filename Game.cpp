@@ -121,9 +121,17 @@ void Game::checkCollision() {
                     - active_->circle->getPosition().y, 2);
 
                 if (sqrt(a_square + b_square) <= 2 * C_RADIUS) {
-                    
+                    double old_direction = active_->direction;
                     active_->direction = -1;
-                    int x = active_->circle->getPosition().x / (2 * C_RADIUS);
+
+                    int x;
+                    if (old_direction > 0 && old_direction < 180) {
+                        x = std::round(active_->circle->getPosition().x / (2 * C_RADIUS));
+                    }
+                    else {
+                        x = active_->circle->getPosition().x / (2 * C_RADIUS);
+                    }
+                    
                     int y = active_->circle->getPosition().y / (2 * C_RADIUS) + 1;
                     int offsetX = 0;
 
@@ -133,11 +141,86 @@ void Game::checkCollision() {
                     active_->circle->setPosition(x * 2 * C_RADIUS + offsetX,
                         y * 2 * C_RADIUS);
                     circles_[x][y] = active_;
+                    checkRemoval(x, y, active_->circle->getFillColor());
                     newCircle();
                 }
             }
         }
     }
+}
+
+void Game::checkRemoval(int orig_x, int orig_y, sf::Color color) {
+    std::deque<std::pair<int, int>> d;
+    std::deque<std::pair<int, int>> b;
+    d.push_back({ orig_x, orig_y });
+    b.push_back({ orig_x, orig_y });
+
+    while (!d.empty()) {
+        int x = d.front().first;
+        int y = d.front().second;
+        d.pop_front();
+
+        if (circles_[x + 1][y] != nullptr
+            && circles_[x + 1][y]->circle->getFillColor() == color) {
+            d.push_back({ x + 1, y });
+            b.push_back({ x + 1, y });
+        }
+
+        if (circles_[x - 1][y] != nullptr
+            && circles_[x - 1][y]->circle->getFillColor() == color) {
+            d.push_back({ x - 1, y });
+            b.push_back({ x - 1, y });
+        }
+
+        if (circles_[x][y + 1] != nullptr
+            && circles_[x][y + 1]->circle->getFillColor() == color) {
+            d.push_back({ x, y + 1 });
+            b.push_back({ x, y + 1 });
+        }
+
+        if (circles_[x][y - 1] != nullptr
+            && circles_[x][y - 1]->circle->getFillColor() == color) {
+            d.push_back({ x, y - 1 });
+            b.push_back({ x, y - 1 });
+        }
+
+        if (y % 2 == 0) {
+            if (circles_[x + 1][y + 1] != nullptr
+                && circles_[x + 1][y + 1]->circle->getFillColor() == color) {
+                d.push_back({ x + 1, y + 1 });
+                b.push_back({ x + 1, y + 1 });
+            }
+
+            if (circles_[x + 1][y - 1] != nullptr
+                && circles_[x + 1][y - 1]->circle->getFillColor() == color) {
+                d.push_back({ x + 1, y - 1 });
+                b.push_back({ x + 1, y - 1 });
+            }
+        } else {
+            if (circles_[x - 1][y + 1] != nullptr
+                && circles_[x - 1][y + 1]->circle->getFillColor() == color) {
+                d.push_back({ x - 1, y + 1 });
+                b.push_back({ x - 1, y + 1 });
+            }
+
+            if (circles_[x - 1][y - 1] != nullptr
+                && circles_[x - 1][y - 1]->circle->getFillColor() == color) {
+                d.push_back({ x - 1, y - 1 });
+                b.push_back({ x - 1, y - 1 });
+            }
+        }
+
+        if (b.size() >= 3) {
+            for (auto& i : b) {
+                delete circles_[i.first][i.second];
+                circles_[i.first][i.second] = nullptr;
+            }
+        }
+    }
+}
+
+void Game::checkIslands() {
+
 }
 
 void Game::update() {
@@ -156,6 +239,7 @@ void Game::update() {
     }
 
     checkCollision();
+    checkIslands();
 
     window->clear();
 
