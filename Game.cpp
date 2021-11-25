@@ -2,17 +2,26 @@
 #include <iostream>
 
 Game::Game() {
+    for (int i = 0; i < C_PER_ROW; i++) {
+        for (int j = 0; j < C_PER_COL; j++) {
+            circles_[i][j] = nullptr;
+        }
+    }
+
     initWindow();
     initField();
     window->setFramerateLimit(60);
-	running_ = true;
+    running_ = true;
 }
 
 Game::~Game() {
     delete window;
     
-    for (const auto& c : circles_) {
-        delete c.circle;
+    for (const auto& x : circles_) {
+        for (const auto& y : x) {
+            delete y->circle;
+            delete y;
+        }
     }
 
     delete active_.circle;
@@ -45,8 +54,6 @@ void Game::initWindow() {
 }
 
 void Game::initField() {
-    circles_.reserve(INITIAL_BALLS_COLS * INITIAL_BALLS_ROWS);
-
     for (int x = 0; x < INITIAL_BALLS_COLS; x++) {
         for (int y = 0; y < INITIAL_BALLS_ROWS; y++) {
             int offsetY = 0;
@@ -59,7 +66,7 @@ void Game::initField() {
             shape->setPosition(x * C_RADIUS * 2 + offsetY,
                 y * C_RADIUS * 2);
 
-            circles_.push_back(Circle{ shape });
+            circles_[x][y] = new Circle { shape };
         }
     }
 
@@ -120,8 +127,13 @@ void Game::update() {
     }
 
     window->clear();
-    for (const auto& c : circles_) {
-        window->draw(*c.circle);
+
+    for (const auto& x : circles_) {
+        for (const auto& y : x) {
+            if (y != nullptr) {
+                window->draw(*y->circle);
+            }
+        }
     }
 
     // Move the active circle
