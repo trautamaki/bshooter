@@ -15,6 +15,8 @@ private:
 	void initWindow();
 	void initField();
 	void updateArrow(sf::Vector2i pos);
+	void newCircle();
+	void launch();
 
 	// Constants
 	const unsigned int C_RADIUS = 20;
@@ -33,22 +35,12 @@ private:
 
 	const double PI = atan(1) * 4;
 
-	enum Color {
-		GREEN,
-		YELLOW,
-		MAGENTA,
-		BLUE,
-		RED,
-		CYAN,
-		AMOUNT_COLORS,
-	};
-
 	struct Circle {
-		sf::CircleShape circle;
+		sf::CircleShape* circle;
 
 		// A moving circle
 		bool stale = false;
-		int direction = -1;
+		double direction = -1;
 		int x = -1;
 		int y = -1;
 	};
@@ -59,6 +51,7 @@ private:
 	bool running_ = false;
 
 	std::vector<Circle> circles_;
+	Circle active_;
 
 	std::vector<sf::Color> colors_ = {
 		sf::Color::Green,

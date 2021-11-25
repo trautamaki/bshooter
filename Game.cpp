@@ -9,10 +9,16 @@ Game::Game() {
 
 Game::~Game() {
     delete window;
+    
+    for (auto c : circles_) {
+        delete c.circle;
+    }
+
+    delete active_.circle;
 }
 
 bool Game::running() {
-	return running_;
+    return running_;
 }
 
 void Game::initWindow() {
@@ -21,6 +27,7 @@ void Game::initWindow() {
 	window = new sf::RenderWindow(sf::VideoMode(FIELD_WIDTH, FIELD_HEIGHT),
 		"Bubble shooter", sf::Style::Titlebar | sf::Style::Close, settings);
 
+    // Setup the arrow
     arrowLine_ = sf::VertexArray(sf::LinesStrip, 2);
     arrowLine_[0].position = sf::Vector2f(window->getSize().x / 2,
         window->getSize().y);
@@ -37,7 +44,7 @@ void Game::initWindow() {
 }
 
 void Game::initField() {
-    circles_.reserve((int) INITIAL_BALLS_COLS * INITIAL_BALLS_ROWS);
+    circles_.reserve(INITIAL_BALLS_COLS * INITIAL_BALLS_ROWS);
 
     for (int x = 0; x < INITIAL_BALLS_COLS; x++) {
         for (int y = 0; y < INITIAL_BALLS_ROWS; y++) {
@@ -46,14 +53,16 @@ void Game::initField() {
                 offsetY = C_RADIUS;
             }
 
-            sf::CircleShape shape(C_RADIUS);
-            shape.setFillColor(colors_.at(rand() % AMOUNT_COLORS));
-            shape.setPosition(x * C_RADIUS * 2 + offsetY,
+            sf::CircleShape* shape = new sf::CircleShape(C_RADIUS);
+            shape->setFillColor(colors_.at(rand() % colors_.size()));
+            shape->setPosition(x * C_RADIUS * 2 + offsetY,
                 y * C_RADIUS * 2);
 
             circles_.push_back(Circle{ shape });
         }
     }
+
+    newCircle();
 }
 
 void Game::updateArrow(sf::Vector2i pos) {
@@ -82,6 +91,18 @@ void Game::updateArrow(sf::Vector2i pos) {
     arrowTriangle_.setRotation(angle);
 }
 
+void Game::newCircle() {
+    active_ = Circle{ new sf::CircleShape(C_RADIUS) };
+    active_.circle->setFillColor(colors_.at(rand() % colors_.size()));
+    active_.circle->setPosition(window->getSize().x / 2 - C_RADIUS,
+        window->getSize().y - 2 * C_RADIUS);
+}
+
+void Game::launch() {
+    // Get launch angle
+    active_.direction = arrowTriangle_.getRotation();
+}
+
 void Game::update() {
     sf::Event event;
     while (window->pollEvent(event)) {
@@ -90,12 +111,28 @@ void Game::update() {
 
         } else if (event.type == sf::Event::MouseMoved) {
             updateArrow(sf::Mouse::getPosition(*window));
+
+        } else if (event.type == sf::Event::MouseButtonReleased) {
+            launch();
         }
     }
 
     window->clear();
-    for (auto b : circles_) {
-        window->draw(b.circle);
+    for (auto c : circles_) {
+        window->draw(*c.circle);
+    }
+
+    // Move the active circle
+    if (active_.circle != nullptr && active_.direction > 0) {
+        double angle = active_.direction;
+        double move_x = -sin(angle * PI / 180);
+        double move_y = cos(angle * PI / 180);
+        auto current_pos = active_.circle->getPosition();
+
+        active_.circle->setPosition(current_pos.x - move_x,
+            current_pos.y - move_y);
+
+        window->draw(*active_.circle);
     }
 
     // Draw the arrow parts
