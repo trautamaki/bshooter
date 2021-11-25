@@ -103,7 +103,7 @@ void Game::newCircle() {
     active_ = new Circle{ new sf::CircleShape(C_RADIUS) };
     active_->circle->setFillColor(colors_.at(rand() % colors_.size()));
     active_->circle->setPosition(window->getSize().x / 2 - C_RADIUS,
-        window->getSize().y - 2 * C_RADIUS);
+        window->getSize().y - C_RADIUS);
 }
 
 void Game::launch() {
