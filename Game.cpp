@@ -113,7 +113,8 @@ void Game::update() {
         } else if (event.type == sf::Event::MouseMoved) {
             updateArrow(sf::Mouse::getPosition(*window));
 
-        } else if (event.type == sf::Event::MouseButtonReleased) {
+        } else if (event.type == sf::Event::MouseButtonReleased
+            && active_.direction < 0) {
             launch();
         }
     }
