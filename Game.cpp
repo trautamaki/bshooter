@@ -10,7 +10,7 @@ Game::Game() {
 Game::~Game() {
     delete window;
     
-    for (auto c : circles_) {
+    for (const auto& c : circles_) {
         delete c.circle;
     }
 
@@ -118,7 +118,7 @@ void Game::update() {
     }
 
     window->clear();
-    for (auto c : circles_) {
+    for (const auto& c : circles_) {
         window->draw(*c.circle);
     }
 
