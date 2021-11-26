@@ -3,6 +3,8 @@
 #include <array>
 #include <deque>
 #include <math.h>
+#include <unordered_map>
+#include <stack>
 
 class Game {
 public:
@@ -35,11 +37,20 @@ private:
 
 	// Check if circles have 3 or more of same color in a row
 	// at coordinate x,y.
-	void checkRemoval(int x, int y, sf::Color color);
+	// Return true if something is deleted.
+	bool checkRemoval(int x, int y, sf::Color color);
 
 	// Check for islands that may be left after removing
 	// surrounding circles.
 	void checkIslands();
+
+	// Check if coordinate is inside field.
+	// Return true if it is.
+	bool isValidCoord(int x, int y);
+
+	// Check if circle at x,y is same color as param color.
+	// Return true if it is.
+	bool isSameColor(int x, int y, sf::Color color);
 
 	// Constants
 	static constexpr unsigned int C_RADIUS = 20;
@@ -59,13 +70,8 @@ private:
 	const double PI = atan(1) * 4;
 
 	struct Circle {
-		sf::CircleShape* circle;
-
-		// A moving circle
-		bool stale = false;
+		std::shared_ptr<sf::CircleShape> circle;
 		double direction = -1;
-		int x = -1;
-		int y = -1;
 	};
 
 
