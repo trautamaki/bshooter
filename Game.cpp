@@ -2,8 +2,8 @@
 #include <iostream>
 
 Game::Game() {
-    for (int i = 0; i < C_PER_ROW; i++) {
-        for (int j = 0; j < C_PER_COL; j++) {
+    for (int i = 0; i < Config::C_PER_ROW; i++) {
+        for (int j = 0; j < Config::C_PER_COL; j++) {
             circles_[i][j] = nullptr;
         }
     }
@@ -33,7 +33,7 @@ bool Game::running() {
 void Game::initWindow() {
     sf::ContextSettings settings;
     settings.antialiasingLevel = 8.0;
-	window = new sf::RenderWindow(sf::VideoMode(FIELD_WIDTH, FIELD_HEIGHT),
+	window = new sf::RenderWindow(sf::VideoMode(Config::FIELD_WIDTH, Config::FIELD_HEIGHT),
 		"Bubble shooter", sf::Style::Titlebar | sf::Style::Close, settings);
 
     // Setup the arrow
@@ -41,7 +41,7 @@ void Game::initWindow() {
     arrowLine_[0].position = sf::Vector2f(window->getSize().x / 2,
         window->getSize().y);
     arrowLine_[1].position = sf::Vector2f(window->getSize().x / 2,
-        window->getSize().y - ARROW_LENGTH);
+        window->getSize().y - Config::ARROW_LENGTH);
     arrowLine_[0].color = sf::Color::White;
     arrowLine_[1].color = sf::Color::White;
 
@@ -53,17 +53,17 @@ void Game::initWindow() {
 }
 
 void Game::initField() {
-    for (int x = 0; x < INITIAL_BALLS_COLS; x++) {
-        for (int y = 0; y < INITIAL_BALLS_ROWS; y++) {
+    for (int x = 0; x < Config::INITIAL_C_COLS; x++) {
+        for (int y = 0; y < Config::INITIAL_C_ROWS; y++) {
             int offsetX = 0;
             if (y % 2 == 0) {
-                offsetX = C_RADIUS;
+                offsetX = Config::C_RADIUS;
             }
 
-            std::shared_ptr<sf::CircleShape> shape(new sf::CircleShape(C_RADIUS));
+            std::shared_ptr<sf::CircleShape> shape(new sf::CircleShape(Config::C_RADIUS));
             shape->setFillColor(colors_.at(rand() % colors_.size()));
-            shape->setPosition(x * C_RADIUS * 2 + offsetX,
-                y * C_RADIUS * 2);
+            shape->setPosition(x * Config::C_RADIUS * 2 + offsetX,
+                y * Config::C_RADIUS * 2);
 
             circles_[x][y] = new Circle { shape };
         }
@@ -78,8 +78,7 @@ void Game::updateArrow(sf::Vector2i pos) {
     double x, angle;
     double len_y = (double) wSize.y - pos.y;
     double len_x = abs(wSize.x / 2.0 - pos.x);
-    double f = ARROW_LENGTH /
-        (sqrt(pow(len_x, 2) + pow(len_y, 2)));
+    double f = Config::ARROW_LENGTH / (sqrt(pow(len_x, 2) + pow(len_y, 2)));
     double y = wSize.y - len_y * f;
 
     if (pos.x < window->getSize().x / 2) {
@@ -99,10 +98,11 @@ void Game::updateArrow(sf::Vector2i pos) {
 }
 
 void Game::newCircle() {
-    active_ = new Circle{ std::make_shared<sf::CircleShape>(sf::CircleShape(C_RADIUS)) };
+    active_ = new Circle
+        { std::make_shared<sf::CircleShape>(sf::CircleShape(Config::C_RADIUS)) };
     active_->circle->setFillColor(colors_.at(rand() % colors_.size()));
-    active_->circle->setPosition(window->getSize().x / 2 - C_RADIUS,
-        window->getSize().y - C_RADIUS);
+    active_->circle->setPosition(window->getSize().x / 2 - Config::C_RADIUS,
+        window->getSize().y - Config::C_RADIUS);
 }
 
 void Game::launch() {
@@ -119,24 +119,24 @@ void Game::checkCollision() {
                 float b_square = pow(y->circle->getPosition().y
                     - active_->circle->getPosition().y, 2);
 
-                if (sqrt(a_square + b_square) <= 2 * C_RADIUS) {
+                if (sqrt(a_square + b_square) <= 2 * Config::C_RADIUS) {
                     double old_direction = active_->direction;
                     active_->direction = -1;
 
                     int x;
                     if (old_direction > 0 && old_direction < 180) {
-                        x = std::round(active_->circle->getPosition().x / (2 * C_RADIUS));
+                        x = std::round(active_->circle->getPosition().x / (2 * Config::C_RADIUS));
                     } else {
-                        x = active_->circle->getPosition().x / (2 * C_RADIUS);
+                        x = active_->circle->getPosition().x / (2 * Config::C_RADIUS);
                     }
                     
-                    int y = active_->circle->getPosition().y / (2 * C_RADIUS) + 1;
+                    int y = active_->circle->getPosition().y / (2 * Config::C_RADIUS) + 1;
                     int offsetX = 0;
 
-                    if (y % 2 == 0) offsetX = C_RADIUS;
+                    if (y % 2 == 0) offsetX = Config::C_RADIUS;
 
-                    active_->circle->setPosition(x * 2 * C_RADIUS + offsetX,
-                        y * 2 * C_RADIUS);
+                    active_->circle->setPosition(x * 2 * Config::C_RADIUS + offsetX,
+                        y * 2 * Config::C_RADIUS);
                     circles_[x][y] = active_;
 
                     is_active_moving_ = false;
@@ -212,7 +212,7 @@ void Game::checkIslands() {
     int start_y = 0;
     int start_x = -1;
 
-    for (int i = 0; i < C_PER_ROW; i++) {
+    for (int i = 0; i < Config::C_PER_ROW; i++) {
         if (circles_[0][i] != nullptr) {
             start_x = i;
             break;
@@ -223,7 +223,7 @@ void Game::checkIslands() {
 
     std::deque<std::pair<int, int>> d;
     std::map<std::pair<int, int>, Circle*> visited;
-    std::array<std::array<bool, C_PER_COL>, C_PER_ROW> res;
+    std::array<std::array<bool, Config::C_PER_COL>, Config::C_PER_ROW> res;
 
     for (int x = 0; x < res.size(); x++) {
         for (int y = 0; y < res[y].size(); y++) {
@@ -289,7 +289,7 @@ void Game::checkIslands() {
 }
 
 bool Game::isValidCoord(int x, int y) {
-    if (x >= 0 && x < C_PER_ROW && y >= 0 && y < C_PER_COL) {
+    if (x >= 0 && x < Config::C_PER_ROW && y >= 0 && y < Config::C_PER_COL) {
         return true;
     }
 
@@ -344,7 +344,7 @@ void Game::update() {
             auto current_pos = active_->circle->getPosition();
 
             if (active_->circle->getPosition().x <= 0 ||
-                active_->circle->getPosition().x >= window->getSize().x - 2 * C_RADIUS) {
+                active_->circle->getPosition().x >= window->getSize().x - 2 * Config::C_RADIUS) {
                 active_->direction = 360 - angle;
                 move_x = -move_x;
             }

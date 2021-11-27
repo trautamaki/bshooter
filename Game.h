@@ -6,6 +6,8 @@
 #include <unordered_map>
 #include <stack>
 
+#include "Config.h"
+
 class Game {
 public:
 	Game();
@@ -52,21 +54,6 @@ private:
 	// Return true if it is.
 	bool isSameColor(int x, int y, sf::Color color);
 
-	// Constants
-	static constexpr unsigned int C_RADIUS = 20;
-
-	static constexpr unsigned int SHOOTING_AREA_HEIGHT = 20;
-	static constexpr unsigned int C_PER_ROW = 17;
-	static const unsigned int C_PER_COL = 15;
-	static constexpr unsigned int FIELD_WIDTH = C_PER_ROW * C_RADIUS * 2 + C_RADIUS;
-	static constexpr unsigned int FIELD_HEIGHT = C_PER_COL * C_RADIUS * 2
-		+ SHOOTING_AREA_HEIGHT;
-
-	static constexpr unsigned int INITIAL_BALLS_ROWS = 9;
-	static constexpr unsigned int INITIAL_BALLS_COLS = C_PER_ROW;
-
-	static constexpr double ARROW_LENGTH = 100;
-
 	const double PI = atan(1) * 4;
 
 	struct Circle {
@@ -80,7 +67,7 @@ private:
 	bool running_ = false;
 	bool is_active_moving_ = false;
 
-	std::array<std::array<Circle*, C_PER_COL>, C_PER_ROW> circles_;
+	std::array<std::array<Circle*, Config::C_PER_COL>, Config::C_PER_ROW> circles_;
 	Circle* active_;
 
 	std::vector<sf::Color> colors_ = {
