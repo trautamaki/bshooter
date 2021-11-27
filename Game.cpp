@@ -153,15 +153,6 @@ void Game::checkCollision() {
 bool Game::checkRemoval(int orig_x, int orig_y, sf::Color color) {
     std::deque<std::pair<int, int>> d;
     std::map<std::pair<int, int>, Circle*> del;
-    std::vector<std::pair<int, int>> check = {
-        { 1, 0 }, { -1, 0 }, { 0, 1 }, { 0, -1 }
-    };
-    std::vector<std::pair<int, int>> check_even = {
-        { 1, 1 }, { 1, -1 }
-    };
-    std::vector<std::pair<int, int>> check_odd = {
-        { -1, 1 }, { -1, -1 }
-    };
 
     d.push_back({ orig_x, orig_y });
 
@@ -170,7 +161,7 @@ bool Game::checkRemoval(int orig_x, int orig_y, sf::Color color) {
         int y = d.front().second;
         d.pop_front();
 
-        for (auto i : check) {
+        for (auto i : check_) {
             if (isSameColor(x + i.first, y + i.second, color)
                 && del.find({ x + i.first, y + i.second }) == del.end()) {
 
@@ -181,7 +172,7 @@ bool Game::checkRemoval(int orig_x, int orig_y, sf::Color color) {
         }
 
         if (y % 2 == 0) {
-            for (auto i : check_even) {
+            for (auto i : check_even_) {
                 if (isSameColor(x + i.first, y + i.second, color)
                     && del.find({ x + i.first, y + i.second }) == del.end()) {
 
@@ -191,7 +182,7 @@ bool Game::checkRemoval(int orig_x, int orig_y, sf::Color color) {
                 }
             }
         } else {
-            for (auto i : check_odd) {
+            for (auto i : check_odd_) {
                 if (isSameColor(x + i.first, y + i.second, color)
                     && del.find({ x + i.first, y + i.second }) == del.end()) {
 
@@ -208,7 +199,11 @@ bool Game::checkRemoval(int orig_x, int orig_y, sf::Color color) {
             delete circles_[i.first.first][i.first.second];
             circles_[i.first.first][i.first.second] = nullptr;
         }
+
+        return true;
     }
+
+    return false;
 }
 
 void Game::checkIslands() {
@@ -224,10 +219,76 @@ void Game::checkIslands() {
     }
 
     if (start_x == -1) return;
+
+    std::deque<std::pair<int, int>> d;
+    std::map<std::pair<int, int>, Circle*> visited;
+    std::array<std::array<bool, C_PER_COL>, C_PER_ROW> res;
+
+    for (int x = 0; x < res.size(); x++) {
+        for (int y = 0; y < res[y].size(); y++) {
+            res[x][y] = true;
+        }
+    }
+
+    d.push_back({ start_x, start_y });
+
+    while (!d.empty()) {
+        int x = d.front().first;
+        int y = d.front().second;
+        d.pop_front();
+
+        for (auto i : check_) {
+            if (isValidCoord(x + i.first, y + i.second)
+                && visited.find({ x + i.first, y + i.second }) == visited.end()
+                && circles_[x + i.first][y + i.second] != nullptr) {
+
+                d.push_back({ x + i.first, y + i.second });
+                visited.insert({ { x + i.first, y + i.second  }, circles_[x + 1][y] });
+                res[x + i.first][y + i.second] = false;
+                continue;
+            }
+        }
+
+        if (y % 2 == 0) {
+            for (auto i : check_even_) {
+                if (isValidCoord(x + i.first, y + i.second)
+                    && visited.find({ x + i.first, y + i.second }) == visited.end()
+                    && circles_[x + i.first][y + i.second] != nullptr) {
+
+                    d.push_back({ x + i.first, y + i.second });
+                    visited.insert({ { x + i.first, y + i.second  }, circles_[x + 1][y] });
+                    res[x + i.first][y + i.second] = false;
+                    continue;
+                }
+            }
+        } else {
+            for (auto i : check_odd_) {
+                if (isValidCoord(x + i.first, y + i.second)
+                    && visited.find({ x + i.first, y + i.second }) == visited.end()
+                    && circles_[x + i.first][y + i.second] != nullptr) {
+
+                    d.push_back({ x + i.first, y + i.second });
+                    visited.insert({ { x + i.first, y + i.second  }, circles_[x + 1][y] });
+                    res[x + i.first][y + i.second] = false;
+                    continue;
+                }
+            }
+        }
+    }
+
+    // Delete the ones that are marked ´true´
+    for (int x = 0; x < res.size(); x++) {
+        for (int y = 0; y < res[y].size(); y++) {
+            if (res[x][y] == true) {
+                delete circles_[x][y];
+                circles_[x][y] = nullptr;
+            }
+        }
+    }
 }
 
 bool Game::isValidCoord(int x, int y) {
-    if (x > 0 && x < C_PER_ROW && y > 0 && y < C_PER_COL) {
+    if (x >= 0 && x < C_PER_ROW && y >= 0 && y < C_PER_COL) {
         return true;
     }
 

@@ -94,4 +94,14 @@ private:
 	// The arrow
 	sf::VertexArray arrowLine_;
 	sf::CircleShape arrowTriangle_;
+
+	const std::vector<std::pair<int, int>> check_ = {
+		{ 1, 0 }, { -1, 0 }, { 0, 1 }, { 0, -1 }
+	};
+	const std::vector<std::pair<int, int>> check_even_ = {
+		{ 1, 1 }, { 1, -1 }
+	};
+	const std::vector<std::pair<int, int>> check_odd_ = {
+		{ -1, 1 }, { -1, -1 }
+	};
 };
