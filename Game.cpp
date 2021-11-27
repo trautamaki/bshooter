@@ -153,7 +153,14 @@ void Game::checkCollision() {
 
 bool Game::checkRemoval(int orig_x, int orig_y, sf::Color color) {
     std::deque<std::pair<int, int>> d;
-    std::map<std::pair<int, int>, Circle*> del;
+    std::vector<std::pair<int, int>> del;
+    std::array<std::array<bool, Config::C_PER_COL>, Config::C_PER_ROW> visited;
+
+    for (int x = 0; x < visited.size(); x++) {
+        for (int y = 0; y < visited[y].size(); y++) {
+            visited[x][y] = false;
+        }
+    }
 
     d.push_back({ orig_x, orig_y });
 
@@ -164,10 +171,11 @@ bool Game::checkRemoval(int orig_x, int orig_y, sf::Color color) {
 
         for (auto i : check_) {
             if (isSameColor(x + i.first, y + i.second, color)
-                && del.find({ x + i.first, y + i.second }) == del.end()) {
+                && visited[x + i.first][y + i.second] == false) {
 
                 d.push_back({ x + i.first, y + i.second });
-                del.insert({ { x + i.first, y + i.second  }, circles_[x + 1][y] });
+                visited[x + i.first][y + i.second] = true;
+                del.push_back({ x + i.first, y + i.second  });
                 continue;
             }
         }
@@ -175,20 +183,22 @@ bool Game::checkRemoval(int orig_x, int orig_y, sf::Color color) {
         if (y % 2 == 0) {
             for (auto i : check_even_) {
                 if (isSameColor(x + i.first, y + i.second, color)
-                    && del.find({ x + i.first, y + i.second }) == del.end()) {
+                    && visited[x + i.first][y + i.second] == false) {
 
                     d.push_back({ x + i.first, y + i.second });
-                    del.insert({ { x + i.first, y + i.second  }, circles_[x + 1][y] });
+                    visited[x + i.first][y + i.second] = true;
+                    del.push_back({ x + i.first, y + i.second });
                     continue;
                 }
             }
         } else {
             for (auto i : check_odd_) {
                 if (isSameColor(x + i.first, y + i.second, color)
-                    && del.find({ x + i.first, y + i.second }) == del.end()) {
+                    && visited[x + i.first][y + i.second] == false) {
 
                     d.push_back({ x + i.first, y + i.second });
-                    del.insert({ { x + i.first, y + i.second  }, circles_[x + 1][y] });
+                    visited[x + i.first][y + i.second] = true;
+                    del.push_back({ x + i.first, y + i.second });
                     continue;
                 }
             }
@@ -197,8 +207,8 @@ bool Game::checkRemoval(int orig_x, int orig_y, sf::Color color) {
 
     if (del.size() >= 3) {
         for (auto& i : del) {
-            delete circles_[i.first.first][i.first.second];
-            circles_[i.first.first][i.first.second] = nullptr;
+            delete circles_[i.first][i.second];
+            circles_[i.first][i.second] = nullptr;
         }
 
         return true;
@@ -221,13 +231,13 @@ void Game::checkIslands() {
 
     if (start_x == -1) return;
 
+    // Value ´true´ -> keep circle
+    std::array<std::array<bool, Config::C_PER_COL>, Config::C_PER_ROW> visited;
     std::deque<std::pair<int, int>> d;
-    std::map<std::pair<int, int>, Circle*> visited;
-    std::array<std::array<bool, Config::C_PER_COL>, Config::C_PER_ROW> res;
 
-    for (int x = 0; x < res.size(); x++) {
-        for (int y = 0; y < res[y].size(); y++) {
-            res[x][y] = true;
+    for (int x = 0; x < visited.size(); x++) {
+        for (int y = 0; y < visited[y].size(); y++) {
+            visited[x][y] = false;
         }
     }
 
@@ -240,12 +250,11 @@ void Game::checkIslands() {
 
         for (auto i : check_) {
             if (isValidCoord(x + i.first, y + i.second)
-                && visited.find({ x + i.first, y + i.second }) == visited.end()
+                && visited[x + i.first][y + i.second] == false
                 && circles_[x + i.first][y + i.second] != nullptr) {
 
                 d.push_back({ x + i.first, y + i.second });
-                visited.insert({ { x + i.first, y + i.second  }, circles_[x + 1][y] });
-                res[x + i.first][y + i.second] = false;
+                visited[x + i.first][y + i.second] = true;
                 continue;
             }
         }
@@ -253,34 +262,32 @@ void Game::checkIslands() {
         if (y % 2 == 0) {
             for (auto i : check_even_) {
                 if (isValidCoord(x + i.first, y + i.second)
-                    && visited.find({ x + i.first, y + i.second }) == visited.end()
+                    && visited[x + i.first][y + i.second] == false
                     && circles_[x + i.first][y + i.second] != nullptr) {
 
                     d.push_back({ x + i.first, y + i.second });
-                    visited.insert({ { x + i.first, y + i.second  }, circles_[x + 1][y] });
-                    res[x + i.first][y + i.second] = false;
+                    visited[x + i.first][y + i.second] = true;
                     continue;
                 }
             }
         } else {
             for (auto i : check_odd_) {
                 if (isValidCoord(x + i.first, y + i.second)
-                    && visited.find({ x + i.first, y + i.second }) == visited.end()
+                    && visited[x + i.first][y + i.second] == false
                     && circles_[x + i.first][y + i.second] != nullptr) {
 
                     d.push_back({ x + i.first, y + i.second });
-                    visited.insert({ { x + i.first, y + i.second  }, circles_[x + 1][y] });
-                    res[x + i.first][y + i.second] = false;
+                    visited[x + i.first][y + i.second] = true;
                     continue;
                 }
             }
         }
     }
 
-    // Delete the ones that are marked ´true´
-    for (int x = 0; x < res.size(); x++) {
-        for (int y = 0; y < res[y].size(); y++) {
-            if (res[x][y] == true) {
+    // Delete the ones that are marked ´false´
+    for (int x = 0; x < visited.size(); x++) {
+        for (int y = 0; y < visited[y].size(); y++) {
+            if (visited[x][y] == false) {
                 delete circles_[x][y];
                 circles_[x][y] = nullptr;
             }
