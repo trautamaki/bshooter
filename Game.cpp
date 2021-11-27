@@ -139,6 +139,7 @@ void Game::checkCollision() {
                         y * 2 * C_RADIUS);
                     circles_[x][y] = active_;
 
+                    is_active_moving_ = false;
                     if (checkRemoval(x, y, active_->circle->getFillColor())) {
                         checkIslands();
                     }
@@ -316,10 +317,13 @@ void Game::update() {
         } else if (event.type == sf::Event::MouseButtonReleased
             && active_->direction < 0) {
             launch();
+            is_active_moving_ = true;
         }
     }
 
-    checkCollision();
+    if (is_active_moving_) {
+        checkCollision();
+    }
 
     window->clear();
 

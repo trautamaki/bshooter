@@ -78,6 +78,7 @@ private:
 	// Gameplay
 	sf::RenderWindow* window = nullptr;
 	bool running_ = false;
+	bool is_active_moving_ = false;
 
 	std::array<std::array<Circle*, C_PER_COL>, C_PER_ROW> circles_;
 	Circle* active_;
