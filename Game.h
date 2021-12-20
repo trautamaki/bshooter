@@ -5,7 +5,7 @@
 #include <math.h>
 #include <unordered_map>
 #include <stack>
-
+#include "Graphics/Renderer.h"
 #include "Config.h"
 
 class Game {
@@ -63,7 +63,7 @@ private:
 
 
 	// Gameplay
-	sf::RenderWindow* window = nullptr;
+	std::unique_ptr<Renderer> renderer;
 	bool running_ = false;
 	bool is_active_moving_ = false;
 

@@ -1,4 +1,5 @@
 #include "Game.h"
+#include "Graphics/SFML/SFMLRenderer.h"
 #include <iostream>
 
 Game::Game() {
@@ -10,12 +11,11 @@ Game::Game() {
 
     initWindow();
     initField();
-    window->setFramerateLimit(60);
+    renderer->setFramerate(60);
     running_ = true;
 }
 
 Game::~Game() {
-    delete window;
     
     for (const auto& x : circles_) {
         for (const auto& y : x) {
@@ -31,17 +31,14 @@ bool Game::running() {
 }
 
 void Game::initWindow() {
-    sf::ContextSettings settings;
-    settings.antialiasingLevel = 8.0;
-	window = new sf::RenderWindow(sf::VideoMode(Config::FIELD_WIDTH, Config::FIELD_HEIGHT),
-		"Bubble shooter", sf::Style::Titlebar | sf::Style::Close, settings);
+    renderer = std::make_unique<SFMLRenderer>();
 
     // Setup the arrow
     arrowLine_ = sf::VertexArray(sf::LinesStrip, 2);
-    arrowLine_[0].position = sf::Vector2f(window->getSize().x / 2,
-        window->getSize().y);
-    arrowLine_[1].position = sf::Vector2f(window->getSize().x / 2,
-        window->getSize().y - Config::ARROW_LENGTH);
+    arrowLine_[0].position = sf::Vector2f(renderer->getSize().x / 2,
+        renderer->getSize().y);
+    arrowLine_[1].position = sf::Vector2f(renderer->getSize().x / 2,
+        renderer->getSize().y - Config::ARROW_LENGTH);
     arrowLine_[0].color = sf::Color::White;
     arrowLine_[1].color = sf::Color::White;
 
@@ -72,16 +69,16 @@ void Game::initField() {
     newCircle();
 }
 
-void Game::updateArrow(sf::Vector2i pos) {
+void Game::updateArrow(const sf::Vector2i pos) {
     // The line
-    auto wSize = window->getSize();
+    auto wSize = renderer->getSize();
     double x, angle;
     double len_y = (double) wSize.y - pos.y;
     double len_x = abs(wSize.x / 2.0 - pos.x);
     double f = Config::ARROW_LENGTH / (sqrt(pow(len_x, 2) + pow(len_y, 2)));
     double y = wSize.y - len_y * f;
 
-    if (pos.x < window->getSize().x / 2) {
+    if (pos.x < renderer->getSize().x / 2) {
         x = (wSize.x / 2) - (len_x) * f;
         angle = atan2(len_y, len_x) * 180 / PI - 90;
     } else {
@@ -101,8 +98,8 @@ void Game::newCircle() {
     active_ = new Circle
         { std::make_shared<sf::CircleShape>(sf::CircleShape(Config::C_RADIUS)) };
     active_->circle->setFillColor(colors_.at(rand() % colors_.size()));
-    active_->circle->setPosition(window->getSize().x / 2 - Config::C_RADIUS,
-        window->getSize().y - Config::C_RADIUS);
+    active_->circle->setPosition(renderer->getSize().x / 2 - Config::C_RADIUS,
+        renderer->getSize().y - Config::C_RADIUS);
 }
 
 void Game::launch() {
@@ -314,12 +311,12 @@ bool Game::isSameColor(int x, int y, sf::Color color) {
 
 void Game::update() {
     sf::Event event;
-    while (window->pollEvent(event)) {
+    while (renderer->pollEvent(event)) {
         if (event.type == sf::Event::Closed) {
-            window->close();
-
+            renderer->close();
+            running_ = false;
         } else if (event.type == sf::Event::MouseMoved) {
-            updateArrow(sf::Mouse::getPosition(*window));
+            updateArrow(renderer->getMousePosition());
 
         } else if (event.type == sf::Event::MouseButtonReleased
             && active_->direction < 0) {
@@ -332,12 +329,12 @@ void Game::update() {
         checkCollision();
     }
 
-    window->clear();
+    renderer->clear();
 
     for (const auto& x : circles_) {
         for (const auto& y : x) {
             if (y != nullptr) {
-                window->draw(*y->circle);
+                renderer->draw(*y->circle);
             }
         }
     }
@@ -351,7 +348,7 @@ void Game::update() {
             auto current_pos = active_->circle->getPosition();
 
             if (active_->circle->getPosition().x <= 0 ||
-                active_->circle->getPosition().x >= window->getSize().x - 2 * Config::C_RADIUS) {
+                active_->circle->getPosition().x >= renderer->getSize().x - 2 * Config::C_RADIUS) {
                 active_->direction = 360 - angle;
                 move_x = -move_x;
             }
@@ -360,14 +357,14 @@ void Game::update() {
                 current_pos.y - move_y);
         }
 
-        window->draw(*active_->circle);
+        renderer->draw(*active_->circle);
     }
 
     // Draw the arrow parts
-    window->draw(arrowLine_);
-    window->draw(arrowTriangle_);
+    renderer->draw(arrowLine_);
+    renderer->draw(arrowTriangle_);
 }
 
 void Game::render() {
-    window->display();
+    renderer->display();
 }
